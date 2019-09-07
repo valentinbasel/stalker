@@ -31,7 +31,9 @@ import time
 import os
 import subprocess
 
-class HOJA(object):
+from util import UTIL
+
+class HOJA(UTIL):
 
     """Docstring for HOJA. """
 
@@ -40,17 +42,29 @@ class HOJA(object):
         self.nombre = nombre
         self.notebook = notebook
         self.create_textview(self.nombre)
+        nombre_arch_py = nombre + ".py"
+        self.archivo_py = open(nombre_arch_py,"w")
+        nombre_arch_csv = nombre + ".csv"
+        self.archivo_csv = open(nombre_arch_csv,"w")
+
 
     def create_textview(self,nombre):
-
-        lm = GtkSource.LanguageManager.get_default()
+        """
+        create_textview es el metodo encargado de crear las pestañas dentro
+        del notebook general, y detro de esa pestaña, es el encargado de crear
+        el GtkSourceView para poder escribir y tener resaltado de sintaxis.
+        """
+        header = Gtk.HBox()
         scrolledwindow = Gtk.ScrolledWindow()
         scrolledwindow.set_hexpand(True)
         scrolledwindow.set_vexpand(True)
-        #self.grid.attach(scrolledwindow, 0, 1, 3, 1)
+
+        title_label = Gtk.Label(nombre)
+        lm = GtkSource.LanguageManager.get_default()
         self.textview = GtkSource.View() # Gtk.TextView()
         self.textbuffer = self.textview.get_buffer()
-        self.textbuffer.set_text("")
+        # agrego un texto con dentro del textview
+        self.textbuffer.set_text("") #aca puedo poner un template
         # Selecciono como código fuente a resaltar el lenguaje PYTHON
         self.textbuffer.set_language(lm.get_language("python"))
         # activo el resaltado de imagen
@@ -63,42 +77,38 @@ class HOJA(object):
         self.textview.set_insert_spaces_instead_of_tabs(True)
         # remplaza el TAB con 4 espacios
         self.textview.set_tab_width(4)
+
         scrolledwindow.add(self.textview)
-        self.tag_found = self.textbuffer.create_tag("found",
-                                                    background="yellow")
         self.textview.connect("key-press-event",self.textpress)
-        header = Gtk.HBox()
-        title_label = Gtk.Label(nombre)
-        # image = Gtk.Image()
-        # iconSize = Gtk.IconSize.SMALL_TOOLBAR
-        # image.set_from_stock(Gtk.STOCK_CLOSE, iconSize)
-        # close_button = Gtk.Button()
-        # close_button.set_image(image)
-        #close_button.set_relief(Gtk.RELIEF_NONE)
-
-
         header.pack_start(title_label,
-                          expand=True, fill=True, padding=0)
-        # header.pack_end(close_button,
-                        # expand=False, fill=True, padding=10)
-
-        self.new_button("media-playback-start","ejecutar",header,self.execute,None,None)
-
-        self.new_button("window-close-symbolic","cerrar",header,self.close_cb,self.notebook,scrolledwindow)
+                          expand=True, 
+                          fill=True, 
+                          padding=0
+                          )
+        self.new_button("media-playback-start",
+                        "ejecutar",
+                        header,
+                        self.execute,
+                        self.notebook,
+                        self.textbuffer,
+                        )
+        self.new_button("window-close-symbolic",
+                        "cerrar",
+                        header,
+                        self.close_cb,
+                        self.notebook,
+                        scrolledwindow
+                        )
         header.show_all()
-
         self.notebook.append_page(scrolledwindow,header)
-        # close_button.connect('clicked',
-                                # self.close_cb,
-                                # self.notebook,
-                                # scrolledwindow)
-
-
+    
     def close_cb(self,a,b,c):
         """TODO: Docstring for close_cb.
         :returns: TODO
 
         """
+        self.archivo_csv.close()
+        self.archivo_py.close()
         page_num = b.page_num(c)
         b.remove_page( page_num )
         c.destroy()
@@ -114,41 +124,23 @@ class HOJA(object):
         fecha = str(datetime.now()).split(" ")
         tecla = Gdk.keyval_name(event.keyval)
 
-        cadena_final = tecla +"," + fecha[1]+","+fecha[0]
+        cadena_final = tecla +"," + fecha[1]+","+fecha[0]+"\n"
         print(cadena_final)
+        self.archivo_csv.write(cadena_final)
+
         #print()
 
-    def new_button(self, imagen,text,vbox,func,a,b):
-        """TODO: Docstring for botones_nuevo.
 
-        :arg1: TODO
-        :returns: TODO
-
-        """
-        ## boton de nueva pestaña
-        button_tab = Gtk.Button()
-        iconSize = Gtk.IconSize.LARGE_TOOLBAR
-        img = imagen #"document-new"
-        image = Gtk.Image.new_from_icon_name(img, iconSize)
-        #label = Gtk.Label(text)
-
-        box_boton=Gtk.VBox()
-        box_boton.set_homogeneous(False)
-        #box_boton.set_orientation(Gtk.Orientation.VERTICAL)
-        box_boton.set_spacing(5)
-        box_boton.add(image)
-        #box_boton.add(label)
-        button_tab.add(box_boton)
-        button_tab.connect("clicked", func,a,b)
-        vbox.pack_start(button_tab,False,True,5)
-
-    def execute(self,button,a,b):
+    def execute(self,button,a,view):
         """TODO: Docstring for execute.
 
         :arg1: TODO
         :returns: TODO
 
         """
-        print ("ejecuto")
-        print(a)
-        print(b)
+
+        start_iter = view.get_start_iter()
+        end_iter = view.get_end_iter()
+        text = view.get_text(start_iter, end_iter, True) 
+        print(text)
+        self.archivo_py.writelines(text)

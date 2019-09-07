@@ -100,7 +100,7 @@ class MAIN_W(object):
         self.notebook = Gtk.Notebook()
         self.hbox.pack_start(self.notebook,True,True,0)
 
-        pagina = HOJA(self.notebook,"programa1.py")
+        pagina = HOJA(self.notebook,"programa1")
 
 
 
@@ -191,6 +191,6 @@ class MAIN_W(object):
         button_tab.connect("clicked", func)
         headerbar.pack_start(button_tab)
  
-grabar = False
+grabar = True
 win = MAIN_W(grabar)
 
