@@ -40,114 +40,90 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Pango, Gdk
 from gi.repository import GtkSource
 from datetime import datetime
+from tab import HOJA
 
 import time
 import os
 import subprocess
 
-
-class HOJA(object):
-
-    """Docstring for HOJA. """
-
-    def __init__(self,notebook):
-        """TODO: to be defined1. """
-        self.notebook = notebook 
-        self.create_textview("programa_1.py")
-
- 
-    def create_textview(self,nombre):
-        lm = GtkSource.LanguageManager.get_default()
-        scrolledwindow = Gtk.ScrolledWindow()
-        scrolledwindow.set_hexpand(True)
-        scrolledwindow.set_vexpand(True)
-        #self.grid.attach(scrolledwindow, 0, 1, 3, 1)
-        self.textview = GtkSource.View() # Gtk.TextView()
-        self.textbuffer = self.textview.get_buffer()
-        self.textbuffer.set_text("")
-        # Selecciono como código fuente a resaltar el lenguaje PYTHON
-        self.textbuffer.set_language(lm.get_language("python"))
-        # activo el resaltado de imagen
-        self.textbuffer.set_highlight_syntax(True)
-        # activo el numero de linea de código en el margen izquierdo
-        self.textview.set_show_line_numbers(True)
-        # cuando se apriete el tabulador o los Spaces, conservar la identación
-        self.textview.set_auto_indent(True)
-        # cuando se teclea TAB, lo remplaza por espacios
-        self.textview.set_insert_spaces_instead_of_tabs(True)
-        # remplaza el TAB con 4 espacios
-        self.textview.set_tab_width(4)
-        scrolledwindow.add(self.textview)
-        self.tag_found = self.textbuffer.create_tag("found",
-                                                    background="yellow")
-        self.textview.connect("key-press-event",self.textpress)
-        header = Gtk.HBox()
-        title_label = Gtk.Label(nombre)
-        image = Gtk.Image()
-        iconSize = Gtk.IconSize.SMALL_TOOLBAR
-        image.set_from_stock(Gtk.STOCK_CLOSE, iconSize)
-        close_button = Gtk.Button()
-        close_button.set_image(image)
-        #close_button.set_relief(Gtk.RELIEF_NONE)
-        header.pack_start(title_label,
-                          expand=True, fill=True, padding=0)
-        header.pack_end(close_button,
-                        expand=False, fill=True, padding=10)
-        header.show_all()
-        self.notebook.append_page(scrolledwindow,header)
-        close_button.connect('clicked',
-                                self.close_cb,
-                                self.notebook,
-                                scrolledwindow)
-
-
-    def close_cb(self,a,b,c):
-        """TODO: Docstring for close_cb.
-        :returns: TODO
-
-        """
-        page_num = b.page_num(c)
-        b.remove_page( page_num )
-        c.destroy()
-
-    def textpress(self,widget, event):
-        """TODO: Docstring for textpress.
-
-        :widget: textview
-        :event: tecla presionada
-        :returns: None
-
-        """
-        fecha = str(datetime.now()).split(" ")
-        tecla = Gdk.keyval_name(event.keyval)
-
-        cadena_final = tecla +"," + fecha[1]+","+fecha[0]
-        print(cadena_final)
-        #print()
- 
 class MAIN_W(object):
 
     """Docstring for MAIN_W. """
 
     def __init__(self,grabar):
         """TODO: to be defined1. """
-        self.grabar=grabar 
+        self.grabar=grabar
         self.main_windows = Gtk.Window(title = "IDE python")
         self.main_windows.set_default_size(-1, 350)
         self.main_windows.connect("destroy", self.close_main)
         self.main_windows.show_all()
-        self.notebook = Gtk.Notebook()
-        
-        pagina = HOJA(self.notebook)
-        pagina = HOJA(self.notebook)
-        pagina = HOJA(self.notebook)
 
-        self.main_windows.add(self.notebook)
+        headerbar = Gtk.HeaderBar()
+        headerbar.set_title("HeaderBar Example")
+        headerbar.set_subtitle("HeaderBar Subtitle")
+        headerbar.set_show_close_button(True)
+        self.main_windows.set_titlebar(headerbar)
+
+        ## boton de barra de herramientas
+        button = Gtk.Button("Open")
+        button.connect("clicked", self.on_popover_clicked)
+        headerbar.pack_start(button)
+
+        self.new_button("document-new","nueva pestaña",headerbar,self.new_tab)
+        
+        ##  popover
+        self.popover = Gtk.Popover()
+        self.popover.set_relative_to(button)
+        ## Box donde se guardan los botones del menu popover
+        box_popover = Gtk.Box()
+        box_popover.set_spacing(5)
+        box_popover.set_orientation(Gtk.Orientation.VERTICAL)
+        self.popover.add(box_popover)
+        ## creo los botones que van dentro del popover
+        for a in range(2):
+            label = Gtk.Label("boton")
+            image = Gtk.Image.new_from_file("icaro.png")
+            box_boton=Gtk.Box()
+            box_boton.set_homogeneous(False)
+            box_boton.set_orientation(Gtk.Orientation.HORIZONTAL)
+            box_boton.set_spacing(5)
+            box_boton.add(image)
+            box_boton.add(label)
+            
+            boton_menu = Gtk.Button()
+            boton_menu.set_tooltip_text(str(a))
+            boton_menu.add(box_boton)
+            boton_menu.connect("clicked", self.on_boton_menu_clicked,a,"f")
+            box_popover.add(boton_menu)
+
+        self.hbox = Gtk.HBox(spacing = 6)
+        self.notebook = Gtk.Notebook()
+        self.hbox.pack_start(self.notebook,True,True,0)
+
+        pagina = HOJA(self.notebook,"programa1.py")
+
+
+
+        self.main_windows.add(self.hbox)
         self.main_windows.show_all()
         if self.grabar==True:
             self.desktop_record_start()
         Gtk.main()
-    
+
+    def new_tab(self,button):
+        """TODO: Docstring for new_tab.
+        :returns: TODO
+
+        """
+        pagina = HOJA(self.notebook,"programa1.py")
+        self.main_windows.show_all()
+
+    def on_popover_clicked(self, button):
+        self.popover.show_all()
+        
+    def on_boton_menu_clicked(self,button,a,f):
+        print("%i,%s",a,f)
+
     def desktop_record_start(self):
         """TODO: Docstring for grabacion.
         :returns: TODO
@@ -190,6 +166,31 @@ class MAIN_W(object):
             self.record_desktop_stop()
         Gtk.main_quit()
 
-grabar = True 
+
+    def new_button(self, imagen,text,headerbar,func):
+        """TODO: Docstring for botones_nuevo.
+
+        :arg1: TODO
+        :returns: TODO
+
+        """
+        ## boton de nueva pestaña
+        button_tab = Gtk.Button()
+        iconSize = Gtk.IconSize.LARGE_TOOLBAR
+        img = imagen #"document-new"
+        image = Gtk.Image.new_from_icon_name(img, iconSize)
+        #label = Gtk.Label(text)
+
+        box_boton=Gtk.VBox()
+        box_boton.set_homogeneous(False)
+        #box_boton.set_orientation(Gtk.Orientation.VERTICAL)
+        box_boton.set_spacing(5)
+        box_boton.add(image)
+        #box_boton.add(label)
+        button_tab.add(box_boton)
+        button_tab.connect("clicked", func)
+        headerbar.pack_start(button_tab)
+ 
+grabar = False
 win = MAIN_W(grabar)
 
