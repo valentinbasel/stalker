@@ -59,3 +59,18 @@ class UTIL(object):
         button_tab.connect("clicked", func,a,b)
         vbox.pack_start(button_tab,False,True,5)
 
+class DIALOG_OK_CANCEL(Gtk.Dialog):
+
+    def __init__(self, parent,text,mensaje):
+        Gtk.Dialog.__init__(self, 
+                            text, 
+                            parent, 
+                            0,
+                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                             Gtk.STOCK_OK, Gtk.ResponseType.OK)
+                            )
+        self.set_default_size(150, 100)
+        label = Gtk.Label(mensaje)
+        box = self.get_content_area()
+        box.add(label)
+        self.show_all()

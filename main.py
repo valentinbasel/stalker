@@ -34,17 +34,19 @@
 ###############################################################################
 
 
-
+## librerias generales
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Pango, Gdk
 from gi.repository import GtkSource
 from datetime import datetime
-from tab import HOJA
-
 import time
 import os
 import subprocess
+
+## librerias internas
+from tab import HOJA
+from util import DIALOG_OK_CANCEL
 
 class MAIN_W(object):
 
@@ -59,8 +61,8 @@ class MAIN_W(object):
         self.main_windows.show_all()
 
         headerbar = Gtk.HeaderBar()
-        headerbar.set_title("HeaderBar Example")
-        headerbar.set_subtitle("HeaderBar Subtitle")
+        #headerbar.set_title("HeaderBar Example")
+        #headerbar.set_subtitle("HeaderBar Subtitle")
         headerbar.set_show_close_button(True)
         self.main_windows.set_titlebar(headerbar)
 
@@ -105,9 +107,20 @@ class MAIN_W(object):
 
 
         self.main_windows.add(self.hbox)
+
         self.main_windows.show_all()
-        if self.grabar==True:
+        
+        mensaje = DIALOG_OK_CANCEL(self.main_windows,"advertencia","hola")
+        respuesta = mensaje.run()
+        if respuesta == Gtk.ResponseType.OK and self.grabar==True:
             self.desktop_record_start()
+        elif respuesta == Gtk.ResponseType.CANCEL:
+            self.grabar = False
+            self.close_main(None)
+            exit()
+        
+        mensaje.destroy()
+
         Gtk.main()
 
     def new_tab(self,button):
