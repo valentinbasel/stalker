@@ -70,7 +70,7 @@ class VLCWidget(Gtk.DrawingArea):
                 self.player.set_xwindow(self.get_window().get_xid())
             return True
         self.connect("realize", handle_embed)
-        self.set_size_request(800, 600)
+        self.set_size_request(640, 480)
 
 class DecoratedVLCWidget(Gtk.VBox):
     """Decorated VLC widget.
@@ -147,25 +147,50 @@ class VideoPlayer:
     """
     def __init__(self):
         self.vlc = DecoratedVLCWidget()
-        
+
+    def carga_archivos(self, arg1):
+        """TODO: Docstring for carga_archivos.
+
+        :arg1: TODO
+        :returns: TODO
+
+        """
+        arc = open(arg1,"r")
+        datos = []
+        for texto in arc.readlines():
+            datos.append(texto.strip("\n"))
+        return datos
+
     def main(self, fname):
-        
-        self.tree = TreeViewFilterWindow("/home/vbasel/programa1.csv")
-        fvideo=fname.split("/")
+        fname_full = fname + "stalker.config"
+        frame = Gtk.Frame(label = "video")
+        datos = self.carga_archivos(fname_full)
+        #print (datos)
+        datos[0] =fname + datos[0]
+        fvideo=datos[0].split("/")
         fvideo = fvideo[-1]
+
         self.seg=self.convert_time(fvideo)
 
-        self.vlc.player.set_media(instance.media_new(fname))
+        self.vlc.player.set_media(instance.media_new(datos[0]))
 
         w = Gtk.Window()
         hbox = Gtk.HBox()
         vbox = Gtk.VBox()
+        self.notebook_tree = Gtk.Notebook()
         boton = Gtk.Button(label = "PDI")
         boton.connect("clicked",self.boton_click)
-
-        
-        hbox.pack_start(self.vlc,True,True,10)
-        vbox.pack_start(self.tree,True,True,0)
+        self.pagina_tree=[]
+        for a in range(1,len(datos)):
+            self.tree = TreeViewFilterWindow(fname+datos[a])
+            self.notebook_tree.append_page(self.tree)
+            nt = self.notebook_tree.get_nth_page(a-1)
+            self.notebook_tree.set_tab_label_text(nt,datos[a])
+            
+            self.pagina_tree.append(self.tree)
+        frame.add(self.vlc)
+        hbox.pack_start(frame,True,True,10)
+        vbox.pack_start(self.notebook_tree,True,True,0)
 
         vbox.pack_start(boton,False,False,0)
         
@@ -182,8 +207,10 @@ class VideoPlayer:
         :returns: TODO
 
         """
-        if self.tree.seg >0:
-            pdi = self.tree.seg - self.seg
+
+        PDI = self.pagina_tree[self.notebook_tree.get_current_page()].seg
+        if PDI >0:
+            pdi = PDI - self.seg
             print(pdi)
             self.vlc.player.set_time(pdi*1000)
     def convert_time(self, hms):

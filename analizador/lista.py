@@ -40,7 +40,7 @@ class TreeViewFilterWindow(Gtk.HBox):
 
         #creating buttons to filter by programming language, and setting up their events
         self.buttons = list()
-        for prog_language in ["BackSpace", "None"]:
+        for prog_language in ["BackSpace", "Delete", "None"]:
             button = Gtk.Button(prog_language)
             self.buttons.append(button)
             button.connect("clicked", self.on_selection_button_clicked)
@@ -48,7 +48,7 @@ class TreeViewFilterWindow(Gtk.HBox):
         #setting up the layout, putting the treeview in a scrollwindow, and the buttons in a row
         self.scrollable_treelist = Gtk.ScrolledWindow()
         self.scrollable_treelist.set_vexpand(True)
-        self.grid.attach(self.scrollable_treelist, 0, 0, 8, 10)
+        self.grid.attach(self.scrollable_treelist, 0, 0, 4, 10)
         self.grid.attach_next_to(self.buttons[0], self.scrollable_treelist, Gtk.PositionType.BOTTOM, 1, 1)
         for i, button in enumerate(self.buttons[1:]):
             self.grid.attach_next_to(button, self.buttons[i], Gtk.PositionType.RIGHT, 1, 1)
@@ -66,6 +66,7 @@ class TreeViewFilterWindow(Gtk.HBox):
         :returns: TODO
 
         """
+        
         (model, pathlist) = tree_selection.get_selected_rows()
         for path in pathlist :
             tree_iter = model.get_iter(path)

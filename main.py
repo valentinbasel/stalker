@@ -128,7 +128,7 @@ class MAIN_W(object):
         :returns: TODO
 
         """
-        pagina = HOJA(self.notebook,"programa1.py")
+        pagina = HOJA(self.notebook,"programa2.py")
         self.main_windows.show_all()
 
     def on_popover_clicked(self, button):
@@ -150,7 +150,7 @@ class MAIN_W(object):
         cadena_final = cadena_final.replace(";","_")
         cadena_final = cadena_final.replace(":","_")
         cadena_final = cadena_final + ".mkv"
-        cadena =[ "ffmpeg -video_size 1024x768 ",
+        cadena =[ "ffmpeg -video_size 800x600 ",
                 "-framerate 25 -f x11grab ",
                 "-i :0.0+0,0 -f pulse -ac 2 -i ",
                 "default ",cadena_final]
