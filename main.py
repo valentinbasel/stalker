@@ -102,7 +102,7 @@ class MAIN_W(object):
         self.notebook = Gtk.Notebook()
         self.hbox.pack_start(self.notebook,True,True,0)
 
-        pagina = HOJA(self.notebook,"programa1")
+        #pagina = HOJA(self.notebook,"programa1")
 
 
 
@@ -128,7 +128,7 @@ class MAIN_W(object):
         :returns: TODO
 
         """
-        pagina = HOJA(self.notebook,"programa2.py")
+        pagina = HOJA(self.notebook,"programa")
         self.main_windows.show_all()
 
     def on_popover_clicked(self, button):

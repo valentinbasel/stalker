@@ -30,6 +30,7 @@ from datetime import datetime
 import time
 import os
 import subprocess
+import sys
 
 from util import UTIL
 
@@ -42,8 +43,8 @@ class HOJA(UTIL):
         self.nombre = nombre
         self.notebook = notebook
         self.create_textview(self.nombre)
-        nombre_arch_py = nombre + ".py"
-        self.archivo_py = open(nombre_arch_py,"w")
+        self.nombre_arch_py = nombre + ".py"
+
         nombre_arch_csv = nombre + ".csv"
         self.archivo_csv = open(nombre_arch_csv,"w")
 
@@ -108,7 +109,8 @@ class HOJA(UTIL):
 
         """
         self.archivo_csv.close()
-        self.archivo_py.close()
+        if self.archivo_py: 
+            self.archivo_py.close()
         page_num = b.page_num(c)
         b.remove_page( page_num )
         c.destroy()
@@ -130,6 +132,21 @@ class HOJA(UTIL):
 
         #print()
 
+    def actualizar_arch(self, view,nombre):
+        """TODO: Docstring for actualizar_arch.
+
+        :arg1: TODO
+        :returns: TODO
+
+        """
+        
+        self.archivo_py = open(nombre,"w")
+        start_iter = view.get_start_iter()
+        end_iter = view.get_end_iter()
+        text = view.get_text(start_iter, end_iter, True) 
+        print(text)
+        self.archivo_py.writelines(text)
+        self.archivo_py.close()
 
     def execute(self,button,a,view):
         """TODO: Docstring for execute.
@@ -138,9 +155,39 @@ class HOJA(UTIL):
         :returns: TODO
 
         """
+        fecha = str(datetime.now()).split(" ")
 
-        start_iter = view.get_start_iter()
-        end_iter = view.get_end_iter()
-        text = view.get_text(start_iter, end_iter, True) 
-        print(text)
-        self.archivo_py.writelines(text)
+        cadena_final = self.nombre_arch_py + "," + fecha[1]+","+fecha[0]+"\n"
+        self.actualizar_arch(view,self.nombre_arch_py)
+        self.actualizar_arch(view,cadena_final)
+        proceso = subprocess.Popen(["python3", 
+                            self.nombre_arch_py], 
+                            stdout=subprocess.PIPE, 
+                            stderr=subprocess.PIPE)
+        i = proceso.wait()
+        print(i)
+        nombre_arch_out = self.nombre_arch_py + ".stout.txt" + "," + fecha[1]+","+fecha[0]+"\n"
+        nombre_arch_err = self.nombre_arch_py + ".sterr.txt" + "," + fecha[1]+","+fecha[0]+"\n"
+
+
+        archivo_salidas = open(nombre_arch_out,"w")
+        archivo_err = open(nombre_arch_err,"w")
+
+        errores = proceso.stderr.read()
+        salida = proceso.stdout.read()
+        proceso.stderr.close()
+        proceso.stdout.close() 
+        print("salida estandar: ", salida.decode(sys.getdefaultencoding()))
+        archivo_salidas.writelines(salida.decode(sys.getdefaultencoding()))
+        archivo_salidas.close()
+
+        if errores != None:
+            archivo_err.write("err:\n")
+            print("salida errores: ",errores.decode(sys.getdefaultencoding()))
+            archivo_err.writelines(errores.decode(sys.getdefaultencoding()))
+            archivo_err.close()
+        
+        self.archivo_csv.write("err_"+str(i)+ "," + fecha[1]+","+fecha[0]+"\n")
+        #self.archivo_csv.write(cadena_final)
+        #self.archivo_csv.write(nombre_arch_out)
+        #self.archivo_csv.write(nombre_arch_err)
