@@ -47,6 +47,7 @@ import subprocess
 ## librerias internas
 from tab import HOJA
 from util import DIALOG_OK_CANCEL
+from util import NUEVO_DOC
 
 class MAIN_W(object):
 
@@ -54,25 +55,46 @@ class MAIN_W(object):
 
     def __init__(self,grabar):
         """TODO: to be defined1. """
+        menues = [ ("Abrir",
+                    "Abre un nuevo archivo",
+                    'document-open',
+                    lambda b: self.abrir()
+                    ),
+                    ("Nuevo",
+                    "Crea una nueva pestaña",
+                    'document-new',
+                    lambda b: self.new_tab(None)
+                    ),
+                    ("Guardar",
+                    "Guarda el archivo",
+                    'document-save',
+                    lambda b: self.guardar()
+                    ),
+                    ("salir",
+                    "Salir del programa",
+                    'application-exit',
+                    lambda b: self.close_main(None)
+                    ),
+                    ]
+        self.proyecto = []
+
         self.grabar=grabar
         self.main_windows = Gtk.Window(title = "IDE python")
         self.main_windows.set_default_size(-1, 350)
         self.main_windows.connect("destroy", self.close_main)
         self.main_windows.show_all()
-
         headerbar = Gtk.HeaderBar()
-        #headerbar.set_title("HeaderBar Example")
-        #headerbar.set_subtitle("HeaderBar Subtitle")
+        headerbar.set_title("¡Advertencia!")
+        headerbar.set_subtitle("el sistema esta grabando el"\
+                                " escritorio y el microfono")
         headerbar.set_show_close_button(True)
         self.main_windows.set_titlebar(headerbar)
-
         ## boton de barra de herramientas
-        button = Gtk.Button("Open")
+        button = Gtk.Button("Menu")
         button.connect("clicked", self.on_popover_clicked)
         headerbar.pack_start(button)
-
         self.new_button("document-new","nueva pestaña",headerbar,self.new_tab)
-        
+
         ##  popover
         self.popover = Gtk.Popover()
         self.popover.set_relative_to(button)
@@ -82,60 +104,107 @@ class MAIN_W(object):
         box_popover.set_orientation(Gtk.Orientation.VERTICAL)
         self.popover.add(box_popover)
         ## creo los botones que van dentro del popover
-        for a in range(2):
-            label = Gtk.Label("boton")
-            image = Gtk.Image.new_from_file("icaro.png")
+        for item in menues:
+            text, tooltip, iconname, callback = item
+            print (iconname)
+            label = Gtk.Label(text)
+            image = Gtk.Image.new_from_icon_name(iconname,
+                                                 Gtk.IconSize.LARGE_TOOLBAR
+                                                 )
             box_boton=Gtk.Box()
             box_boton.set_homogeneous(False)
             box_boton.set_orientation(Gtk.Orientation.HORIZONTAL)
             box_boton.set_spacing(5)
             box_boton.add(image)
             box_boton.add(label)
-            
             boton_menu = Gtk.Button()
-            boton_menu.set_tooltip_text(str(a))
+            boton_menu.set_tooltip_text(tooltip)
             boton_menu.add(box_boton)
-            boton_menu.connect("clicked", self.on_boton_menu_clicked,a,"f")
+            boton_menu.connect("clicked", callback)
             box_popover.add(boton_menu)
-
         self.hbox = Gtk.HBox(spacing = 6)
         self.notebook = Gtk.Notebook()
         self.hbox.pack_start(self.notebook,True,True,0)
-
-        #pagina = HOJA(self.notebook,"programa1")
-
-
-
         self.main_windows.add(self.hbox)
-
         self.main_windows.show_all()
-        
         mensaje = DIALOG_OK_CANCEL(self.main_windows,"advertencia","hola")
         respuesta = mensaje.run()
         if respuesta == Gtk.ResponseType.OK and self.grabar==True:
-            self.desktop_record_start()
+            pass
         elif respuesta == Gtk.ResponseType.CANCEL:
             self.grabar = False
             self.close_main(None)
             exit()
-        
         mensaje.destroy()
-
         Gtk.main()
+
+    def crear_proyecto(self,ruta):
+        """TODO: Docstring for crear_proyecto.
+        :returns: TODO
+
+        """
+        fecha = str(datetime.now()).split(" ")
+        fecha_arch = fecha[1]+"_"+fecha[0]
+        #self.ruta_trabajo
+        fecha_arch = fecha_arch.replace(":","_")
+        fecha_arch = fecha_arch.replace(".","-")
+        self.rutastalker_proy = os.getenv("HOME")+ \
+                            "/.espacio_de_trabajo/"+ruta+"/"
+        os.mkdir(self.rutastalker_proy)
+        self.rutastalker = self.rutastalker_proy + fecha_arch + "/"
+        os.mkdir(self.rutastalker)
+        self.stalker_conf = open(self.rutastalker + "stalker.config","w")
+        if self.grabar == True:
+            self.desktop_record_start()
+
+    def abrir(self):
+        """TODO: Docstring for abrir.
+        :returns: TODO
+
+        """
+        print ("abrir")
 
     def new_tab(self,button):
         """TODO: Docstring for new_tab.
         :returns: TODO
 
         """
-        pagina = HOJA(self.notebook,"programa")
-        self.main_windows.show_all()
+
+        nuevo_arch = NUEVO_DOC(self.main_windows)
+        if len(self.proyecto)>0:
+
+            nombre = nuevo_arch.run("Elija un nombre para su archivo",
+                                    "nuevo archivo")
+            for dat in self.proyecto:
+                if dat == nombre:
+                    print ("nombre duplicado") #aca poner un dialogo de error
+                    return
+
+            self.proyecto.append(nombre)
+            pagina = HOJA(self.notebook,nombre,
+                            self.rutastalker,
+                            self.rutastalker_proy)
+            self.stalker_conf.write(nombre+".csv\n")
+            self.main_windows.show_all()
+        else:
+            nuevo_proyecto = NUEVO_DOC(self.main_windows)
+            nombre = nuevo_arch.run("Elija un nombre para el proyecto",
+                                    "nuevo proyecto")
+            self.crear_proyecto(str(nombre))
+            nuevo_arch = NUEVO_DOC(self.main_windows)
+            nombre = nuevo_arch.run("Elija un nombre para su archivo",
+                                    "nuevo archivo")
+            pagina = HOJA(self.notebook,nombre,
+                            self.rutastalker,
+                            self.rutastalker_proy)
+            self.proyecto.append(nombre)
+            self.stalker_conf.write(nombre+".csv\n")
+            self.main_windows.show_all()
+
+
 
     def on_popover_clicked(self, button):
         self.popover.show_all()
-        
-    def on_boton_menu_clicked(self,button,a,f):
-        print("%i,%s",a,f)
 
     def desktop_record_start(self):
         """TODO: Docstring for grabacion.
@@ -149,15 +218,17 @@ class MAIN_W(object):
 
         cadena_final = cadena_final.replace(";","_")
         cadena_final = cadena_final.replace(":","_")
-        cadena_final = cadena_final + ".mkv"
+
+        cadena_final_grabacion = self.rutastalker+ cadena_final + ".mkv"
         cadena =[ "ffmpeg -video_size 800x600 ",
                 "-framerate 25 -f x11grab ",
                 "-i :0.0+0,0 -f pulse -ac 2 -i ",
-                "default ",cadena_final]
+                "default ",cadena_final_grabacion]
         video=""
         for linea in cadena:
             video = video + linea 
         self.proc1 = subprocess.Popen(video, shell = True)
+        self.stalker_conf.write(cadena_final+".mkv\n")
 
     def record_desktop_stop(self):
         """TODO: Docstring for record_desktop_stop.
@@ -177,6 +248,7 @@ class MAIN_W(object):
         """
         if self.grabar==True:
             self.record_desktop_stop()
+        self.stalker_conf.close()
         Gtk.main_quit()
 
 

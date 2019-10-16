@@ -74,3 +74,37 @@ class DIALOG_OK_CANCEL(Gtk.Dialog):
         box = self.get_content_area()
         box.add(label)
         self.show_all()
+
+class NUEVO_DOC(object):
+
+    """Docstring for NUEVO_DOC. """
+
+    def __init__(self,parent):  #, message, title=''):
+        # Returns user input as a string or None
+        # If user does not input text it returns None, NOT AN EMPTY STRING.
+        self.parent = parent 
+
+    def run(self,message,title=''):
+        dialogWindow = Gtk.MessageDialog(self.parent,
+                              Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                              Gtk.MessageType.QUESTION,
+                              Gtk.ButtonsType.OK_CANCEL,
+                              message)
+
+        dialogWindow.set_title(title)
+
+        dialogBox = dialogWindow.get_content_area()
+        userEntry = Gtk.Entry()
+        userEntry.set_visibility(True)
+        #userEntry.set_invisible_char("*")
+        userEntry.set_size_request(250,0)
+        dialogBox.pack_end(userEntry, False, False, 0)
+
+        dialogWindow.show_all()
+        response = dialogWindow.run()
+        text = userEntry.get_text() 
+        dialogWindow.destroy()
+        if (response == Gtk.ResponseType.OK) and (text != ''):
+            return text
+        else:
+            return None

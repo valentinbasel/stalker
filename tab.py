@@ -38,14 +38,17 @@ class HOJA(UTIL):
 
     """Docstring for HOJA. """
 
-    def __init__(self,notebook,nombre):
+    def __init__(self,notebook,nombre,ruta,ruta_py):
         """TODO: to be defined1. """
+
+        self.rutastalker = ruta
+        self.rutastalker_py = ruta_py
         self.nombre = nombre
         self.notebook = notebook
         self.create_textview(self.nombre)
-        self.nombre_arch_py = nombre + ".py"
-
-        nombre_arch_csv = nombre + ".csv"
+        self.nombre_arch_py = self.rutastalker_py+nombre + ".py"
+        self.nombre_arch_salida = self.rutastalker +nombre+ ".py"
+        nombre_arch_csv = self.rutastalker + nombre + ".csv"
         self.archivo_csv = open(nombre_arch_csv,"w")
 
 
@@ -55,6 +58,7 @@ class HOJA(UTIL):
         del notebook general, y detro de esa pestaña, es el encargado de crear
         el GtkSourceView para poder escribir y tener resaltado de sintaxis.
         """
+        self.archivo_py = None
         header = Gtk.HBox()
         scrolledwindow = Gtk.ScrolledWindow()
         scrolledwindow.set_hexpand(True)
@@ -109,7 +113,7 @@ class HOJA(UTIL):
 
         """
         self.archivo_csv.close()
-        if self.archivo_py: 
+        if self.archivo_py != None: 
             self.archivo_py.close()
         page_num = b.page_num(c)
         b.remove_page( page_num )
@@ -157,7 +161,7 @@ class HOJA(UTIL):
         """
         fecha = str(datetime.now()).split(" ")
 
-        cadena_final = self.nombre_arch_py + "," + fecha[1]+","+fecha[0]+"\n"
+        cadena_final = self.nombre_arch_salida + "," + fecha[1]+","+fecha[0]+"\n"
         self.actualizar_arch(view,self.nombre_arch_py)
         self.actualizar_arch(view,cadena_final)
         proceso = subprocess.Popen(["python3", 
@@ -166,8 +170,10 @@ class HOJA(UTIL):
                             stderr=subprocess.PIPE)
         i = proceso.wait()
         print(i)
-        nombre_arch_out = self.nombre_arch_py + ".stout.txt" + "," + fecha[1]+","+fecha[0]+"\n"
-        nombre_arch_err = self.nombre_arch_py + ".sterr.txt" + "," + fecha[1]+","+fecha[0]+"\n"
+        nombre_arch_out = ".stout.txt" + "," + fecha[1]+","+fecha[0]+"\n"
+        nombre_arch_out = self.nombre_arch_salida + nombre_arch_out 
+        nombre_arch_err = ".sterr.txt" + "," + fecha[1]+","+fecha[0]+"\n"
+        nombre_arch_err = self.nombre_arch_salida + nombre_arch_err 
 
 
         archivo_salidas = open(nombre_arch_out,"w")
