@@ -198,7 +198,28 @@ class VideoPlayer:
         w.add(hbox)
         w.show_all()
         w.connect("destroy", Gtk.main_quit)
+        w.connect("key-press-event",self.on_key_press_event)
         Gtk.main()
+
+    def on_key_press_event(self, widget,event):
+        """TODO: Docstring for on_key_press_event.
+
+        :arg1: TODO
+        :returns: TODO
+
+        """
+        #print ("----------------",widget)
+        print("Key val, name: ", event.keyval, Gdk.keyval_name(event.keyval))
+        valor_tecla = Gdk.keyval_name(event.keyval)
+        
+        if valor_tecla == "F1":
+            self.vlc.player.play()
+        if valor_tecla == "space":
+            self.vlc.player.pause()
+        if valor_tecla == "F3":
+            self.vlc.player.stop()
+        if valor_tecla == "F4":
+            self.boton_click(None)
 
     def boton_click(self, arg1):
         """TODO: Docstring for boton_click.

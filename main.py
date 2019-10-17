@@ -77,23 +77,30 @@ class MAIN_W(object):
                     ),
                     ]
         self.proyecto = []
-
         self.grabar=grabar
         self.main_windows = Gtk.Window(title = "IDE python")
         self.main_windows.set_default_size(-1, 350)
         self.main_windows.connect("destroy", self.close_main)
+        self.archivo_csv = None
+        self.stalker_conf = None
         self.main_windows.show_all()
-        headerbar = Gtk.HeaderBar()
-        headerbar.set_title("¡Advertencia!")
-        headerbar.set_subtitle("el sistema esta grabando el"\
-                                " escritorio y el microfono")
-        headerbar.set_show_close_button(True)
-        self.main_windows.set_titlebar(headerbar)
+        self.headerbar = Gtk.HeaderBar()
+        if self.grabar == True:
+            self.headerbar.set_title("¡Advertencia!")
+            self.headerbar.set_subtitle("el sistema esta grabando el"\
+                                    " escritorio y el microfono")
+        else:
+            self.headerbar.set_title("grabación desactivada")
+            self.headerbar.set_subtitle("el sistema NO esta grabando el"\
+                                    " escritorio ni el microfono (solo interacciones de teclado dentro del IDE)")
+
+        self.headerbar.set_show_close_button(True)
+        self.main_windows.set_titlebar(self.headerbar)
         ## boton de barra de herramientas
         button = Gtk.Button("Menu")
         button.connect("clicked", self.on_popover_clicked)
-        headerbar.pack_start(button)
-        self.new_button("document-new","nueva pestaña",headerbar,self.new_tab)
+        self.headerbar.pack_start(button)
+        self.new_button("document-new","nueva pestaña",self.headerbar,self.new_tab)
 
         ##  popover
         self.popover = Gtk.Popover()
@@ -136,7 +143,18 @@ class MAIN_W(object):
             self.close_main(None)
             exit()
         mensaje.destroy()
+
+
+        self.main_windows.connect('notify::is-active', self.cambia_el_foco)
         Gtk.main()
+
+    def cambia_el_foco(self,window, param):
+        if self.archivo_csv != None:
+            fecha = str(datetime.now()).split(" ")
+            cadena_final = "foco_"+ str(window.props.is_active) +"," + fecha[1]+","+fecha[0]+"\n"
+            print(cadena_final)
+            self.archivo_csv.write(cadena_final)
+
 
     def crear_proyecto(self,ruta):
         """TODO: Docstring for crear_proyecto.
@@ -154,6 +172,8 @@ class MAIN_W(object):
         self.rutastalker = self.rutastalker_proy + fecha_arch + "/"
         os.mkdir(self.rutastalker)
         self.stalker_conf = open(self.rutastalker + "stalker.config","w")
+
+        self.archivo_csv = open(self.rutastalker+"main_windows.csv","w")
         if self.grabar == True:
             self.desktop_record_start()
 
@@ -248,7 +268,10 @@ class MAIN_W(object):
         """
         if self.grabar==True:
             self.record_desktop_stop()
-        self.stalker_conf.close()
+        if self.stalker_conf != None:
+            self.stalker_conf.close()
+        if self.archivo_csv != None:
+            self.archivo_csv.close()
         Gtk.main_quit()
 
 
