@@ -82,9 +82,9 @@ class HOJA(UTIL):
         self.textview.set_insert_spaces_instead_of_tabs(True)
         # remplaza el TAB con 4 espacios
         self.textview.set_tab_width(4)
-
         scrolledwindow.add(self.textview)
         self.textview.connect("key-press-event",self.textpress)
+        self.textview.connect('button_press_event', self.boton_mouse)
         header.pack_start(title_label,
                           expand=True, 
                           fill=True, 
@@ -106,7 +106,24 @@ class HOJA(UTIL):
                         )
         header.show_all()
         self.notebook.append_page(scrolledwindow,header)
-    
+    def boton_mouse(self, widget,event):
+        """TODO: Docstring for boton_mouse.
+
+        :widget: TODO
+        :event: TODO
+        :returns: TODO
+
+        """
+        mouse ="bot_mouse_"+ str(event.button)
+        fecha = str(datetime.now()).split(" ")
+        
+
+        cadena_final = mouse +"," + fecha[1]+","+fecha[0]+"\n"
+        print(cadena_final)
+        self.archivo_csv.write(cadena_final)
+
+
+
     def close_cb(self,a,b,c):
         """TODO: Docstring for close_cb.
         :returns: TODO

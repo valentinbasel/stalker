@@ -40,7 +40,8 @@ class TreeViewFilterWindow(Gtk.HBox):
 
         #creating buttons to filter by programming language, and setting up their events
         self.buttons = list()
-        for prog_language in ["BackSpace", "Delete", "None"]:
+        for prog_language in ["BackSpace", "Delete", "None","bot_mouse_1",
+            "bot_mouse_2","bot_mouse_3","err_0","err_1"]:
             button = Gtk.Button(prog_language)
             self.buttons.append(button)
             button.connect("clicked", self.on_selection_button_clicked)
@@ -50,8 +51,24 @@ class TreeViewFilterWindow(Gtk.HBox):
         self.scrollable_treelist.set_vexpand(True)
         self.grid.attach(self.scrollable_treelist, 0, 0, 4, 10)
         self.grid.attach_next_to(self.buttons[0], self.scrollable_treelist, Gtk.PositionType.BOTTOM, 1, 1)
+        col=1
+        bann=0
         for i, button in enumerate(self.buttons[1:]):
-            self.grid.attach_next_to(button, self.buttons[i], Gtk.PositionType.RIGHT, 1, 1)
+
+            if bann == 4:
+
+
+                self.grid.attach_next_to(button, 
+                                        self.buttons[col-1],
+                                        Gtk.PositionType.BOTTOM,1,1)
+                col = col +1
+                bann=0
+            else:
+                self.grid.attach_next_to(button, 
+                                        self.buttons[i],
+                                        Gtk.PositionType.RIGHT,1,1)
+
+            bann =bann +1
         self.scrollable_treelist.add(self.treeview)
         self.seg=0
         tree_selection = self.treeview.get_selection()
