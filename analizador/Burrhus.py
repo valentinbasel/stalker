@@ -19,6 +19,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
 #
 
+###############################################################################
+#    _______  __   __  ______    ______    __   __  __   __  _______ 
+#   |  _    ||  | |  ||    _ |  |    _ |  |  | |  ||  | |  ||       |
+#   | |_|   ||  | |  ||   | ||  |   | ||  |  |_|  ||  | |  ||  _____|
+#   |       ||  |_|  ||   |_||_ |   |_||_ |       ||  |_|  || |_____ 
+#   |  _   | |       ||    __  ||    __  ||       ||       ||_____  |
+#   | |_|   ||       ||   |  | ||   |  | ||   _   ||       | _____| |
+#   |_______||_______||___|  |_||___|  |_||__| |__||_______||_______|
+#
+###############################################################################
 """VLC Gtk3 Widget classes + example application.
 
 This module provides two helper classes, to ease the embedding of a
@@ -70,7 +80,17 @@ class VLCWidget(Gtk.DrawingArea):
                 self.player.set_xwindow(self.get_window().get_xid())
             return True
         self.connect("realize", handle_embed)
-        self.set_size_request(640, 480)
+        self.set_size_request(800, 600)
+        self.connect("draw", self.da_draw_event)
+
+    def da_draw_event(self, widget, cairo_ctx):
+        #print('da_draw_event')
+        #print('widget:', widget)
+        #print('cairo_ctx:', cairo_ctx)
+
+        cairo_ctx.set_source_rgb(0, 0, 0)
+        cairo_ctx.paint()
+
 
 class DecoratedVLCWidget(Gtk.VBox):
     """Decorated VLC widget.
@@ -104,7 +124,7 @@ class DecoratedVLCWidget(Gtk.VBox):
         :returns: TODO
 
         """
-        print("_")
+        print(arg1)
 
     def on_timeout(self, arg1):
         """TODO: Docstring for on_timeout.
@@ -133,6 +153,8 @@ class DecoratedVLCWidget(Gtk.VBox):
             (_("Pause"), _("Pause"), 'media-playback-pause', lambda b: self.player.pause()),
             (_("Stop"), _("Stop"), 'media-playback-stop', lambda b: self.player.stop()),
             (_("Quit"), _("Quit"), 'window-close-symbolic', Gtk.main_quit),
+            (_("-1S"), _("-1S"), 'media-skip-backward', self.S_menos_1),
+            (_("+1S"), _("+1S"), 'media-skip-forward', self.S_mas_1),
             ):
             i = Gtk.Image.new_from_icon_name(iconname, Gtk.IconSize.LARGE_TOOLBAR)
             b = Gtk.ToolButton()#i, text)
@@ -142,6 +164,46 @@ class DecoratedVLCWidget(Gtk.VBox):
             tb.insert(b, -1)
         return tb
 
+    def S_mas_1(self, arg1):
+        """TODO: Docstring for S1.
+
+        :arg1: TODO
+        :returns: TODO
+
+        """
+        print("+1S")
+        s=self.player.get_state()
+        if s != vlc.State.NothingSpecial and self.player.get_time() >-1:
+            t=self.player.get_time()
+            #print(t)
+            l = self.player.get_length()
+            if t >0:
+                mm=float(int(t)*100/int(l))
+                print(t)
+            self.player.set_time(t+1000)
+    
+        return True
+ 
+    def S_menos_1(self, arg1):
+        """TODO: Docstring for S1.
+
+        :arg1: TODO
+        :returns: TODO
+
+        """
+        print("-1S")
+        s=self.player.get_state()
+        if s != vlc.State.NothingSpecial and self.player.get_time() >-1:
+            t=self.player.get_time()
+            #print(t)
+            l = self.player.get_length()
+            if t >0:
+                mm=float(int(t)*100/int(l))
+                print(t)
+            self.player.set_time(t-1000)
+    
+        return True
+        
 class VideoPlayer:
     """Example simple video player.
     """
@@ -188,7 +250,9 @@ class VideoPlayer:
             self.notebook_tree.set_tab_label_text(nt,datos[a])
             
             self.pagina_tree.append(self.tree)
-        frame.add(self.vlc)
+        boxx = Gtk.HBox()
+        boxx.pack_start(self.vlc,True,True,20)
+        frame.add(boxx)
         hbox.pack_start(frame,True,True,10)
         vbox.pack_start(self.notebook_tree,True,True,0)
 

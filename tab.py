@@ -34,25 +34,28 @@ import sys
 
 from util import UTIL
 
+from util import DIALOG_OK_CANCEL
+
+from util import MENSAJE 
 class HOJA(UTIL):
 
     """Docstring for HOJA. """
 
-    def __init__(self,notebook,nombre,ruta,ruta_py):
+    def __init__(self,notebook,nombre,ruta,ruta_py,win,texto_template):
         """TODO: to be defined1. """
-
+        self.main_windows = win 
         self.rutastalker = ruta
         self.rutastalker_py = ruta_py
         self.nombre = nombre
         self.notebook = notebook
-        self.create_textview(self.nombre)
+        self.create_textview(self.nombre,texto_template)
         self.nombre_arch_py = self.rutastalker_py+nombre + ".py"
         self.nombre_arch_salida = self.rutastalker +nombre+ ".py"
         nombre_arch_csv = self.rutastalker + nombre + ".csv"
         self.archivo_csv = open(nombre_arch_csv,"w")
 
 
-    def create_textview(self,nombre):
+    def create_textview(self,nombre,texto_template):
         """
         create_textview es el metodo encargado de crear las pestañas dentro
         del notebook general, y detro de esa pestaña, es el encargado de crear
@@ -69,7 +72,7 @@ class HOJA(UTIL):
         self.textview = GtkSource.View() # Gtk.TextView()
         self.textbuffer = self.textview.get_buffer()
         # agrego un texto con dentro del textview
-        self.textbuffer.set_text("") #aca puedo poner un template
+        self.textbuffer.set_text(texto_template) #aca puedo poner un template
         # Selecciono como código fuente a resaltar el lenguaje PYTHON
         self.textbuffer.set_language(lm.get_language("python"))
         # activo el resaltado de imagen
@@ -79,9 +82,9 @@ class HOJA(UTIL):
         # cuando se apriete el tabulador o los Spaces, conservar la identación
         self.textview.set_auto_indent(True)
         # cuando se teclea TAB, lo remplaza por espacios
-        self.textview.set_insert_spaces_instead_of_tabs(True)
+        #self.textview.set_insert_spaces_instead_of_tabs(True)
         # remplaza el TAB con 4 espacios
-        self.textview.set_tab_width(4)
+        #self.textview.set_tab_width(4)
         scrolledwindow.add(self.textview)
         self.textview.connect("key-press-event",self.textpress)
         self.textview.connect('button_press_event', self.boton_mouse)
@@ -119,7 +122,7 @@ class HOJA(UTIL):
         
 
         cadena_final = mouse +"," + fecha[1]+","+fecha[0]+"\n"
-        print(cadena_final)
+        #print(cadena_final)
         self.archivo_csv.write(cadena_final)
 
 
@@ -148,7 +151,7 @@ class HOJA(UTIL):
         tecla = Gdk.keyval_name(event.keyval)
 
         cadena_final = tecla +"," + fecha[1]+","+fecha[0]+"\n"
-        print(cadena_final)
+        #print(cadena_final)
         self.archivo_csv.write(cadena_final)
 
         #print()
@@ -165,7 +168,7 @@ class HOJA(UTIL):
         start_iter = view.get_start_iter()
         end_iter = view.get_end_iter()
         text = view.get_text(start_iter, end_iter, True) 
-        print(text)
+        #print(text)
         self.archivo_py.writelines(text)
         self.archivo_py.close()
 
@@ -184,9 +187,10 @@ class HOJA(UTIL):
         proceso = subprocess.Popen(["python3", 
                             self.nombre_arch_py], 
                             stdout=subprocess.PIPE, 
-                            stderr=subprocess.PIPE)
-        i = proceso.wait()
-        print(i)
+                            stderr=subprocess.PIPE,bufsize = 1
+                            )
+        #i = proceso.wait()
+        #print(i)
         nombre_arch_out = ".stout.txt" + "," + fecha[1]+","+fecha[0]+"\n"
         nombre_arch_out = self.nombre_arch_salida + nombre_arch_out 
         nombre_arch_err = ".sterr.txt" + "," + fecha[1]+","+fecha[0]+"\n"
@@ -194,22 +198,32 @@ class HOJA(UTIL):
 
 
         archivo_salidas = open(nombre_arch_out,"w")
-        archivo_err = open(nombre_arch_err,"w")
+
+        for linea in iter(proceso.stdout.readline, b''):
+            print (">>> ",linea.decode(sys.getdefaultencoding()))
+            archivo_salidas.write(linea.decode(sys.getdefaultencoding())+"\n")
 
         errores = proceso.stderr.read()
         salida = proceso.stdout.read()
-        proceso.stderr.close()
-        proceso.stdout.close() 
-        print("salida estandar: ", salida.decode(sys.getdefaultencoding()))
-        archivo_salidas.writelines(salida.decode(sys.getdefaultencoding()))
-        archivo_salidas.close()
-
-        if errores != None:
-            archivo_err.write("err:\n")
-            print("salida errores: ",errores.decode(sys.getdefaultencoding()))
-            archivo_err.writelines(errores.decode(sys.getdefaultencoding()))
-            archivo_err.close()
         
+        proceso.communicate()
+        i = proceso.poll()
+        print("El sistema termino con una salida: ",i)
+        #print("----------------------",salida)
+        #proceso.stderr.close()
+        #proceso.stdout.close() 
+        #print("salida estandar: ", salida.decode(sys.getdefaultencoding()))
+        #archivo_salidas.writelines(salida.decode(sys.getdefaultencoding()))
+        archivo_salidas.close()
+        if i > 0:
+            archivo_err = open(nombre_arch_err,"w")
+            sal = errores.decode(sys.getdefaultencoding())
+            mensaje = MENSAJE(sal)
+            #archivo_err.write("err:\n")
+            #sal = errores.decode(sys.getdefaultencoding())
+            #print("salida errores: ",sal)
+            archivo_err.writelines(sal)
+            archivo_err.close()
         self.archivo_csv.write("err_"+str(i)+ "," + fecha[1]+","+fecha[0]+"\n")
         #self.archivo_csv.write(cadena_final)
         #self.archivo_csv.write(nombre_arch_out)

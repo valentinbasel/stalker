@@ -25,6 +25,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Pango, Gdk
 from gi.repository import GtkSource
+import sys
 
 
 class UTIL(object):
@@ -108,3 +109,67 @@ class NUEVO_DOC(object):
             return text
         else:
             return None
+
+class MENSAJE(object):
+
+    """Docstring for MENSAJE. """
+
+    def __init__(self,men):
+        """TODO: to be defined1. """
+        
+        self.main_windows = Gtk.Window(title = "salida de errores")
+        self.main_windows.set_default_size(500,400)
+        vbox = Gtk.VBox()
+        self.main_windows.add(vbox)
+        self.scrolledwindow = Gtk.ScrolledWindow()
+        self.scrolledwindow.set_hexpand(True)
+        self.scrolledwindow.set_vexpand(True)
+        #self.grid.attach(scrolledwindow, 0, 1, 3, 1)
+        boton = Gtk.Button("salir")
+
+        boton.connect("clicked", self.close)
+        self.textview = Gtk.TextView()
+        self.textbuffer = self.textview.get_buffer()
+        self.textbuffer.set_text(men)
+        self.scrolledwindow.add(self.textview)
+        vbox.pack_start(self.scrolledwindow,True,True,0)
+        vbox.pack_start(boton,False,False,0)
+        self.main_windows.show_all()
+
+    def close(self, arg1):
+        self.main_windows.hide()
+
+class ABRIR_DIALOG(object):
+    
+    """Docstring for ABRIR_DIALOG. """
+    
+    def __init__(self):
+        """TODO: to be defined1. """
+        self.dialog = Gtk.FileChooserDialog(
+                            "Abrir",
+                            None,
+                            Gtk.FileChooserAction.OPEN,
+                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                            Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+        self.dialog.set_default_response(Gtk.ResponseType.OK)
+        self.dialog.set_current_folder(sys.path[0])
+
+    def abrir_pry(self,tipo):
+        """TODO: Docstring for abrir_pry.
+        :returns: TODO
+
+        """
+        if tipo =="proyecto":
+            filter = Gtk.FileFilter()
+            filter.set_name("torcaz")
+            filter.add_pattern("*.stlkr")
+            self.dialog.add_filter(filter)
+            response = self.dialog.run()
+            if response == Gtk.ResponseType.OK:
+                cadena = self.dialog.get_filename()
+                self.dialog.destroy()
+                return cadena
+            elif response == Gtk.ResponseType.CANCEL:
+                self.dialog.destroy()
+                return None
+        self.dialog.destroy()
