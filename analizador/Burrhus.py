@@ -20,10 +20,10 @@
 #
 
 ###############################################################################
-#    _______  __   __  ______    ______    __   __  __   __  _______ 
+#    _______  __   __  ______    ______    __   __  __   __  _______
 #   |  _    ||  | |  ||    _ |  |    _ |  |  | |  ||  | |  ||       |
 #   | |_|   ||  | |  ||   | ||  |   | ||  |  |_|  ||  | |  ||  _____|
-#   |       ||  |_|  ||   |_||_ |   |_||_ |       ||  |_|  || |_____ 
+#   |       ||  |_|  ||   |_||_ |   |_||_ |       ||  |_|  || |_____
 #   |  _   | |       ||    __  ||    __  ||       ||       ||_____  |
 #   | |_|   ||       ||   |  | ||   |  | ||   _   ||       | _____| |
 #   |_______||_______||___|  |_||___|  |_||__| |__||_______||_______|
@@ -41,18 +41,17 @@ DecoratedVLCWidget provides simple player controls.
 When called as an application, it behaves as a video player.
 """
 
+from gettext import gettext as _
+import vlc
+import sys
+from lista import TreeViewFilterWindow
+from gi.repository import Gtk, GObject
+from gi.repository import Gdk
 import gi
 gi.require_version('Gdk', '3.0')
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gdk
-from gi.repository import Gtk, GObject
-from lista import TreeViewFilterWindow
-Gdk.threads_init ()
+Gdk.threads_init()
 
-import sys
-import vlc
-
-from gettext import gettext as _
 
 # Create a single vlc.Instance() to be shared by (possible) multiple players.
 if 'linux' in sys.platform:
@@ -73,6 +72,7 @@ class VLCWidget(Gtk.DrawingArea):
     def __init__(self, *p):
         Gtk.DrawingArea.__init__(self)
         self.player = instance.media_player_new()
+
         def handle_embed(*args):
             if sys.platform == 'win32':
                 self.player.set_hwnd(self.get_window().get_handle())
@@ -84,7 +84,7 @@ class VLCWidget(Gtk.DrawingArea):
         self.connect("draw", self.da_draw_event)
 
     def da_draw_event(self, widget, cairo_ctx):
-        #print('da_draw_event')
+        # print('da_draw_event')
         #print('widget:', widget)
         #print('cairo_ctx:', cairo_ctx)
 
@@ -105,15 +105,17 @@ class DecoratedVLCWidget(Gtk.VBox):
     def __init__(self, *p):
         super(DecoratedVLCWidget, self).__init__()
         self._vlc_widget = VLCWidget(*p)
-        self.player = self._vlc_widget.player 
-        ad1 = Gtk.Adjustment(0, 0,100, 1, 20, 0)
-        self.scaled = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=ad1)
+        self.player = self._vlc_widget.player
+        ad1 = Gtk.Adjustment(0, 0, 100, 1, 20, 0)
+        self.scaled = Gtk.Scale(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            adjustment=ad1)
         self.scaled.connect("value-changed", self.scale_moved)
-        self.pack_start(self._vlc_widget,True,True,0)
-        self.pack_start(self.scaled,False,False,0)
+        self.pack_start(self._vlc_widget, True, True, 0)
+        self.pack_start(self.scaled, False, False, 0)
         self._toolbar = self.get_player_control_toolbar()
         self.pack_start(self._toolbar, False, False, 0)
-        #self.add(self.vbox)
+        # self.add(self.vbox)
         GObject.timeout_add(1000, self.on_timeout, None)
         self.show_all()
 
@@ -133,13 +135,13 @@ class DecoratedVLCWidget(Gtk.VBox):
         :returns: TODO
 
         """
-        s=self.player.get_state()
-        if s != vlc.State.NothingSpecial and self.player.get_time() >-1:
-            t=self.player.get_time()
-            #print(t)
+        s = self.player.get_state()
+        if s != vlc.State.NothingSpecial and self.player.get_time() > -1:
+            t = self.player.get_time()
+            # print(t)
             l = self.player.get_length()
-            if t >0:
-                mm=float(int(t)*100/int(l))
+            if t > 0:
+                mm = float(int(t) * 100 / int(l))
                 print(mm)
                 self.scaled.set_value(mm)
         return True
@@ -155,9 +157,10 @@ class DecoratedVLCWidget(Gtk.VBox):
             (_("Quit"), _("Quit"), 'window-close-symbolic', Gtk.main_quit),
             (_("-1S"), _("-1S"), 'media-skip-backward', self.S_menos_1),
             (_("+1S"), _("+1S"), 'media-skip-forward', self.S_mas_1),
-            ):
-            i = Gtk.Image.new_from_icon_name(iconname, Gtk.IconSize.LARGE_TOOLBAR)
-            b = Gtk.ToolButton()#i, text)
+        ):
+            i = Gtk.Image.new_from_icon_name(
+                iconname, Gtk.IconSize.LARGE_TOOLBAR)
+            b = Gtk.ToolButton()  # i, text)
             b.set_icon_widget(i)
             b.set_tooltip_text(tooltip)
             b.connect("clicked", callback)
@@ -172,18 +175,18 @@ class DecoratedVLCWidget(Gtk.VBox):
 
         """
         print("+1S")
-        s=self.player.get_state()
-        if s != vlc.State.NothingSpecial and self.player.get_time() >-1:
-            t=self.player.get_time()
-            #print(t)
+        s = self.player.get_state()
+        if s != vlc.State.NothingSpecial and self.player.get_time() > -1:
+            t = self.player.get_time()
+            # print(t)
             l = self.player.get_length()
-            if t >0:
-                mm=float(int(t)*100/int(l))
+            if t > 0:
+                mm = float(int(t) * 100 / int(l))
                 print(t)
-            self.player.set_time(t+1000)
-    
+            self.player.set_time(t + 1000)
+
         return True
- 
+
     def S_menos_1(self, arg1):
         """TODO: Docstring for S1.
 
@@ -192,21 +195,23 @@ class DecoratedVLCWidget(Gtk.VBox):
 
         """
         print("-1S")
-        s=self.player.get_state()
-        if s != vlc.State.NothingSpecial and self.player.get_time() >-1:
-            t=self.player.get_time()
-            #print(t)
+        s = self.player.get_state()
+        if s != vlc.State.NothingSpecial and self.player.get_time() > -1:
+            t = self.player.get_time()
+            # print(t)
             l = self.player.get_length()
-            if t >0:
-                mm=float(int(t)*100/int(l))
+            if t > 0:
+                mm = float(int(t) * 100 / int(l))
                 print(t)
-            self.player.set_time(t-1000)
-    
+            self.player.set_time(t - 1000)
+
         return True
-        
+
+
 class VideoPlayer:
     """Example simple video player.
     """
+
     def __init__(self):
         self.vlc = DecoratedVLCWidget()
 
@@ -217,7 +222,7 @@ class VideoPlayer:
         :returns: TODO
 
         """
-        arc = open(arg1,"r")
+        arc = open(arg1, "r")
         datos = []
         for texto in arc.readlines():
             datos.append(texto.strip("\n"))
@@ -225,14 +230,14 @@ class VideoPlayer:
 
     def main(self, fname):
         fname_full = fname + "stalker.config"
-        frame = Gtk.Frame(label = "video")
+        frame = Gtk.Frame(label="video")
         datos = self.carga_archivos(fname_full)
         #print (datos)
-        datos[0] =fname + datos[0]
-        fvideo=datos[0].split("/")
+        datos[0] = fname + datos[0]
+        fvideo = datos[0].split("/")
         fvideo = fvideo[-1]
 
-        self.seg=self.convert_time(fvideo)
+        self.seg = self.convert_time(fvideo)
 
         self.vlc.player.set_media(instance.media_new(datos[0]))
 
@@ -240,32 +245,32 @@ class VideoPlayer:
         hbox = Gtk.HBox()
         vbox = Gtk.VBox()
         self.notebook_tree = Gtk.Notebook()
-        boton = Gtk.Button(label = "PDI")
-        boton.connect("clicked",self.boton_click)
-        self.pagina_tree=[]
-        for a in range(1,len(datos)):
-            self.tree = TreeViewFilterWindow(fname+datos[a])
+        boton = Gtk.Button(label="PDI")
+        boton.connect("clicked", self.boton_click)
+        self.pagina_tree = []
+        for a in range(1, len(datos)):
+            self.tree = TreeViewFilterWindow(fname + datos[a])
             self.notebook_tree.append_page(self.tree)
-            nt = self.notebook_tree.get_nth_page(a-1)
-            self.notebook_tree.set_tab_label_text(nt,datos[a])
-            
+            nt = self.notebook_tree.get_nth_page(a - 1)
+            self.notebook_tree.set_tab_label_text(nt, datos[a])
+
             self.pagina_tree.append(self.tree)
         boxx = Gtk.HBox()
-        boxx.pack_start(self.vlc,True,True,20)
+        boxx.pack_start(self.vlc, True, True, 20)
         frame.add(boxx)
-        hbox.pack_start(frame,True,True,10)
-        vbox.pack_start(self.notebook_tree,True,True,0)
+        hbox.pack_start(frame, True, True, 10)
+        vbox.pack_start(self.notebook_tree, True, True, 0)
 
-        vbox.pack_start(boton,False,False,0)
-        
-        hbox.pack_start(vbox,False,False,10)
+        vbox.pack_start(boton, False, False, 0)
+
+        hbox.pack_start(vbox, False, False, 10)
         w.add(hbox)
         w.show_all()
         w.connect("destroy", Gtk.main_quit)
-        w.connect("key-press-event",self.on_key_press_event)
+        w.connect("key-press-event", self.on_key_press_event)
         Gtk.main()
 
-    def on_key_press_event(self, widget,event):
+    def on_key_press_event(self, widget, event):
         """TODO: Docstring for on_key_press_event.
 
         :arg1: TODO
@@ -275,7 +280,7 @@ class VideoPlayer:
         #print ("----------------",widget)
         print("Key val, name: ", event.keyval, Gdk.keyval_name(event.keyval))
         valor_tecla = Gdk.keyval_name(event.keyval)
-        
+
         if valor_tecla == "F1":
             self.vlc.player.play()
         if valor_tecla == "space":
@@ -294,10 +299,11 @@ class VideoPlayer:
         """
 
         PDI = self.pagina_tree[self.notebook_tree.get_current_page()].seg
-        if PDI >0:
+        if PDI > 0:
             pdi = PDI - self.seg
             print(pdi)
-            self.vlc.player.set_time(pdi*1000)
+            self.vlc.player.set_time(pdi * 1000)
+
     def convert_time(self, hms):
         """TODO: Docstring for convert_time.
 
@@ -307,19 +313,19 @@ class VideoPlayer:
         """
 
         hms = hms.split("_")
-        h=int(hms[0])*3600
-        m=int(hms[1])*60
-        s=int(hms[2])
-        seg=h+m+s
+        h = int(hms[0]) * 3600
+        m = int(hms[1]) * 60
+        s = int(hms[2])
+        seg = h + m + s
         print(seg)
-        return seg 
+        return seg
+
 
 if __name__ == '__main__':
     if not sys.argv[1:]:
-       print('You must provide at least 1 movie filename')
-       sys.exit(1)
+        print('You must provide at least 1 movie filename')
+        sys.exit(1)
     if len(sys.argv[1:]) == 1:
-        p=VideoPlayer()
+        p = VideoPlayer()
         p.main(sys.argv[1])
     instance.release()
-

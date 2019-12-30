@@ -3,7 +3,7 @@
 
 ###############################################################################
 #
-# class new page 
+# class new page
 # Copyright © 2019 Valentín Basel <valentinbasel@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -21,41 +21,38 @@
 #
 ###############################################################################
 
+from util import MENSAJE
+from util import DIALOG_OK_CANCEL
+from util import UTIL
+import sys
+import subprocess
+import os
+import time
+from datetime import datetime
+from gi.repository import GtkSource
+from gi.repository import Gtk, Pango, Gdk
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Pango, Gdk
-from gi.repository import GtkSource
-from datetime import datetime
 
-import time
-import os
-import subprocess
-import sys
 
-from util import UTIL
-
-from util import DIALOG_OK_CANCEL
-
-from util import MENSAJE 
 class HOJA(UTIL):
 
     """Docstring for HOJA. """
 
-    def __init__(self,notebook,nombre,ruta,ruta_py,win,texto_template):
+    def __init__(self, notebook, nombre, ruta, ruta_py, win, texto_template):
         """TODO: to be defined1. """
-        self.main_windows = win 
+        self.main_windows = win
         self.rutastalker = ruta
         self.rutastalker_py = ruta_py
         self.nombre = nombre
         self.notebook = notebook
-        self.create_textview(self.nombre,texto_template)
-        self.nombre_arch_py = self.rutastalker_py+nombre + ".py"
-        self.nombre_arch_salida = self.rutastalker +nombre+ ".py"
+        self.create_textview(self.nombre, texto_template)
+        self.nombre_arch_py = self.rutastalker_py + nombre + ".py"
+        self.nombre_arch_salida = self.rutastalker + nombre + ".py"
         nombre_arch_csv = self.rutastalker + nombre + ".csv"
-        self.archivo_csv = open(nombre_arch_csv,"w")
+        self.archivo_csv = open(nombre_arch_csv, "w")
 
-
-    def create_textview(self,nombre,texto_template):
+    def create_textview(self, nombre, texto_template):
         """
         create_textview es el metodo encargado de crear las pestañas dentro
         del notebook general, y detro de esa pestaña, es el encargado de crear
@@ -69,10 +66,10 @@ class HOJA(UTIL):
 
         title_label = Gtk.Label(nombre)
         lm = GtkSource.LanguageManager.get_default()
-        self.textview = GtkSource.View() # Gtk.TextView()
+        self.textview = GtkSource.View()  # Gtk.TextView()
         self.textbuffer = self.textview.get_buffer()
         # agrego un texto con dentro del textview
-        self.textbuffer.set_text(texto_template) #aca puedo poner un template
+        self.textbuffer.set_text(texto_template)  # aca puedo poner un template
         # Selecciono como código fuente a resaltar el lenguaje PYTHON
         self.textbuffer.set_language(lm.get_language("python"))
         # activo el resaltado de imagen
@@ -82,15 +79,15 @@ class HOJA(UTIL):
         # cuando se apriete el tabulador o los Spaces, conservar la identación
         self.textview.set_auto_indent(True)
         # cuando se teclea TAB, lo remplaza por espacios
-        #self.textview.set_insert_spaces_instead_of_tabs(True)
+        # self.textview.set_insert_spaces_instead_of_tabs(True)
         # remplaza el TAB con 4 espacios
-        #self.textview.set_tab_width(4)
+        # self.textview.set_tab_width(4)
         scrolledwindow.add(self.textview)
-        self.textview.connect("key-press-event",self.textpress)
+        self.textview.connect("key-press-event", self.textpress)
         self.textview.connect('button_press_event', self.boton_mouse)
         header.pack_start(title_label,
-                          expand=True, 
-                          fill=True, 
+                          expand=True,
+                          fill=True,
                           padding=0
                           )
         self.new_button("media-playback-start",
@@ -108,8 +105,9 @@ class HOJA(UTIL):
                         scrolledwindow
                         )
         header.show_all()
-        self.notebook.append_page(scrolledwindow,header)
-    def boton_mouse(self, widget,event):
+        self.notebook.append_page(scrolledwindow, header)
+
+    def boton_mouse(self, widget, event):
         """TODO: Docstring for boton_mouse.
 
         :widget: TODO
@@ -117,29 +115,26 @@ class HOJA(UTIL):
         :returns: TODO
 
         """
-        mouse ="bot_mouse_"+ str(event.button)
+        mouse = "bot_mouse_" + str(event.button)
         fecha = str(datetime.now()).split(" ")
-        
 
-        cadena_final = mouse +"," + fecha[1]+","+fecha[0]+"\n"
-        #print(cadena_final)
+        cadena_final = mouse + "," + fecha[1] + "," + fecha[0] + "\n"
+        # print(cadena_final)
         self.archivo_csv.write(cadena_final)
 
-
-
-    def close_cb(self,a,b,c):
+    def close_cb(self, a, b, c):
         """TODO: Docstring for close_cb.
         :returns: TODO
 
         """
         self.archivo_csv.close()
-        if self.archivo_py != None: 
+        if self.archivo_py is not None:
             self.archivo_py.close()
         page_num = b.page_num(c)
-        b.remove_page( page_num )
+        b.remove_page(page_num)
         c.destroy()
 
-    def textpress(self,widget, event):
+    def textpress(self, widget, event):
         """TODO: Docstring for textpress.
 
         :widget: textview
@@ -150,29 +145,29 @@ class HOJA(UTIL):
         fecha = str(datetime.now()).split(" ")
         tecla = Gdk.keyval_name(event.keyval)
 
-        cadena_final = tecla +"," + fecha[1]+","+fecha[0]+"\n"
-        #print(cadena_final)
+        cadena_final = tecla + "," + fecha[1] + "," + fecha[0] + "\n"
+        # print(cadena_final)
         self.archivo_csv.write(cadena_final)
 
-        #print()
+        # print()
 
-    def actualizar_arch(self, view,nombre):
+    def actualizar_arch(self, view, nombre):
         """TODO: Docstring for actualizar_arch.
 
         :arg1: TODO
         :returns: TODO
 
         """
-        
-        self.archivo_py = open(nombre,"w")
+
+        self.archivo_py = open(nombre, "w")
         start_iter = view.get_start_iter()
         end_iter = view.get_end_iter()
-        text = view.get_text(start_iter, end_iter, True) 
-        #print(text)
+        text = view.get_text(start_iter, end_iter, True)
+        # print(text)
         self.archivo_py.writelines(text)
         self.archivo_py.close()
 
-    def execute(self,button,a,view):
+    def execute(self, button, a, view):
         """TODO: Docstring for execute.
 
         :arg1: TODO
@@ -181,50 +176,60 @@ class HOJA(UTIL):
         """
         fecha = str(datetime.now()).split(" ")
 
-        cadena_final = self.nombre_arch_salida + "," + fecha[1]+","+fecha[0]+"\n"
-        self.actualizar_arch(view,self.nombre_arch_py)
-        self.actualizar_arch(view,cadena_final)
-        proceso = subprocess.Popen(["python3", 
-                            self.nombre_arch_py], 
-                            stdout=subprocess.PIPE, 
-                            stderr=subprocess.PIPE,bufsize = 1
-                            )
-        #i = proceso.wait()
-        #print(i)
-        nombre_arch_out = ".stout.txt" + "," + fecha[1]+","+fecha[0]+"\n"
-        nombre_arch_out = self.nombre_arch_salida + nombre_arch_out 
-        nombre_arch_err = ".sterr.txt" + "," + fecha[1]+","+fecha[0]+"\n"
-        nombre_arch_err = self.nombre_arch_salida + nombre_arch_err 
+        cadena_final = self.nombre_arch_salida + \
+            "," + fecha[1] + "," + fecha[0] + "\n"
+        self.actualizar_arch(view, self.nombre_arch_py)
+        self.actualizar_arch(view, cadena_final)
+        proceso = subprocess.Popen(["python3",
+                                    self.nombre_arch_py],
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, bufsize=1
+                                   )
+        # i = proceso.wait()
+        # print(i)
+        nombre_arch_out = ".stout.txt" + "," + fecha[1] + "," + fecha[0] + "\n"
+        nombre_arch_out = self.nombre_arch_salida + nombre_arch_out
+        nombre_arch_err = ".sterr.txt" + "," + fecha[1] + "," + fecha[0] + "\n"
+        nombre_arch_err = self.nombre_arch_salida + nombre_arch_err
 
-
-        archivo_salidas = open(nombre_arch_out,"w")
+        archivo_salidas = open(nombre_arch_out, "w")
 
         for linea in iter(proceso.stdout.readline, b''):
-            print (">>> ",linea.decode(sys.getdefaultencoding()))
-            archivo_salidas.write(linea.decode(sys.getdefaultencoding())+"\n")
+            print(">>> ", linea.decode(sys.getdefaultencoding()))
+            archivo_salidas.write(
+                linea.decode(
+                    sys.getdefaultencoding()) +
+                "\n")
 
         errores = proceso.stderr.read()
-        salida = proceso.stdout.read()
-        
+        # salida = proceso.stdout.read()
+
         proceso.communicate()
         i = proceso.poll()
-        print("El sistema termino con una salida: ",i)
-        #print("----------------------",salida)
-        #proceso.stderr.close()
-        #proceso.stdout.close() 
-        #print("salida estandar: ", salida.decode(sys.getdefaultencoding()))
-        #archivo_salidas.writelines(salida.decode(sys.getdefaultencoding()))
+        print("El sistema termino con una salida: ", i)
+        # print("----------------------",salida)
+        # proceso.stderr.close()
+        # proceso.stdout.close()
+        # print("salida estandar: ", salida.decode(sys.getdefaultencoding()))
+        # archivo_salidas.writelines(salida.decode(sys.getdefaultencoding()))
         archivo_salidas.close()
         if i > 0:
-            archivo_err = open(nombre_arch_err,"w")
+            archivo_err = open(nombre_arch_err, "w")
             sal = errores.decode(sys.getdefaultencoding())
-            mensaje = MENSAJE(sal)
-            #archivo_err.write("err:\n")
-            #sal = errores.decode(sys.getdefaultencoding())
-            #print("salida errores: ",sal)
+            MENSAJE(sal, "salida de errores")
+            # archivo_err.write("err:\n")
+            # sal = errores.decode(sys.getdefaultencoding())
+            # print("salida errores: ",sal)
             archivo_err.writelines(sal)
             archivo_err.close()
-        self.archivo_csv.write("err_"+str(i)+ "," + fecha[1]+","+fecha[0]+"\n")
-        #self.archivo_csv.write(cadena_final)
-        #self.archivo_csv.write(nombre_arch_out)
-        #self.archivo_csv.write(nombre_arch_err)
+        self.archivo_csv.write(
+            "err_" +
+            str(i) +
+            "," +
+            fecha[1] +
+            "," +
+            fecha[0] +
+            "\n")
+        # self.archivo_csv.write(cadena_final)
+        # self.archivo_csv.write(nombre_arch_out)
+        # self.archivo_csv.write(nombre_arch_err)
