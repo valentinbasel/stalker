@@ -50,6 +50,7 @@ from util import NUEVO_DOC
 from util import DIALOG_OK_CANCEL
 from tab import HOJA
 from util import MENSAJE
+from util import UTIL
 import template
 import subprocess
 import os
@@ -114,12 +115,16 @@ class MAIN_W(object):
                    'document-open',
                    lambda b: self.abrir_pry()
                    ),
-
                   ("Nuevo",
                    "Crea una nueva pestaña",
                    'document-new',
                    lambda b: self.new_tab(None)
                    ),
+                  # ("nuevo proyecto",
+                  #  "Crea un nuevo proyecto desde cero",
+                  #  'document-new',
+                  #  lambda b: self.nuevo_proyecto()
+                  #  ),
                   ("Guardar",
                    "Guarda el archivo",
                    'document-save',
@@ -139,6 +144,7 @@ class MAIN_W(object):
         self.mouse_csv = None
         self.archivo_csv = None
         self.stalker_conf = None
+        self.sesion = None
         self.texto_template = template.texto
         self.main_windows = Gtk.Window(title="IDE python")
         self.main_windows.set_default_size(-1, 350)
@@ -214,6 +220,13 @@ class MAIN_W(object):
         self.main_windows.connect('notify::is-active', self.cambia_el_foco)
         Gtk.main()
 
+#    def nuevo_proyecto(self):
+#        """TODO: Docstring for nuevo_proyecto.
+#        :returns: TODO
+#
+#        """
+#        self.cerrar_archivos()
+
     def mouse_event(self, a, b):
         """TODO: Docstring for mouse_event.
 
@@ -247,7 +260,9 @@ class MAIN_W(object):
         fecha_arch = fecha_arch.replace(".", "-")
         self.rutastalker_proy = os.getenv("HOME") + \
             "/espacio_de_trabajo/" + ruta + "/"
-        os.mkdir(self.rutastalker_proy)
+        if os.path.exists(self.rutastalker_proy) is False:
+            os.mkdir(self.rutastalker_proy)
+
         self.rutastalker = self.rutastalker_proy + fecha_arch + "/"
         os.mkdir(self.rutastalker)
         self.stalker_conf = open(self.rutastalker + "stalker.config", "w")
@@ -256,6 +271,10 @@ class MAIN_W(object):
         self.archivo_csv.write("tecla,hora,fecha\n")
         self.mouse_csv = open(self.rutastalker + "main_windows_mouse.csv", "w")
         self.mouse_csv.write("x,y,hora,fecha\n")
+        sesion = os.getenv("HOME") + "/espacio_de_trabajo/"+ruta+"/" +\
+            ruta+".trcz"
+        self.sesion = open(sesion, "w")
+
         if self.grabar:
             self.desktop_record_start()
 
@@ -274,40 +293,44 @@ class MAIN_W(object):
         print("abrir proyecto")
         pry = ABRIR_DIALOG()
         resultado = pry.abrir_pry("proyecto")
-        print(resultado)
-        #if respuesta == Gtk.ResponseType.OK: 
-            # NUEVO_DOC(self.main_windows)
-            
-            # #nombre = 
-            # self.crear_proyecto(str(nombre))
-            # nuevo_arch = NUEVO_DOC(self.main_windows)
-            # nombre = nuevo_arch.run("Elija un nombre para su archivo",
-                                    # "nuevo archivo")
-            # HOJA(self.notebook, nombre,
-                 # self.rutastalker,
-                 # self.rutastalker_proy,
-                 # self.main_windows,
-                 # self.texto_template)
-            # self.proyecto.append(nombre)
-            # self.stalker_conf.write(nombre + ".csv\n")
-            # self.main_windows.show_all()
+        direc, archi = UTIL.split_archivo(None, resultado)
+        print(direc)
+        print(archi)
+        if resultado is not None:  # todo esto hay que revisar
+            sesion = open(resultado, "r")
+            tabs = []
+            for t in sesion.readlines():
+                tabs.append(t)
+            sesion.close()
+            print(tabs)
+            self.crear_proyecto(archi.strip(".trcz"))  # esto esta mal
 
-    def agr_nom_proyecto(self, nombre):
+            for tab in tabs:
+                tab = tab.strip("\n")
+                ruta_archivo = direc+tab+".py"
+                arch = open(ruta_archivo, "r")
+                arch_tex = arch.readlines()
+                lineas = ""
+                for linea in arch_tex:
+                    lineas = lineas + linea
+                arch.close()
+                self.agr_nom_proyecto(tab, lineas)
+
+    def agr_nom_proyecto(self, nombre, texto):
         """TODO: Docstring for agr_nom_proyecto.
-
         :nombre: TODO
         :returns: TODO
 
         """
         self.proyecto.append(nombre)
+        self.sesion.write(nombre+"\n")
         HOJA(self.notebook, nombre,
              self.rutastalker,
              self.rutastalker_proy,
              self.main_windows,
-             self.texto_template)
+             texto)
         self.stalker_conf.write(nombre + ".csv\n")
-        self.main_windows.show_all() 
-
+        self.main_windows.show_all()
 
     def new_tab(self, button):
         """TODO: Docstring for new_tab.
@@ -322,9 +345,9 @@ class MAIN_W(object):
                                     "nuevo archivo")
             for dat in self.proyecto:
                 if dat == nombre:
-                    MENSAJE("nombre duplicado", "ERROR")  
+                    MENSAJE("nombre duplicado", "ERROR")
                     return
-            self.agr_nom_proyecto(nombre)
+            self.agr_nom_proyecto(nombre, self.texto_template)
 
         else:
             # NUEVO_DOC(self.main_windows)
@@ -334,7 +357,7 @@ class MAIN_W(object):
             nuevo_arch = NUEVO_DOC(self.main_windows)
             nombre = nuevo_arch.run("Elija un nombre para su archivo",
                                     "nuevo archivo")
-            self.agr_nom_proyecto(nombre)
+            self.agr_nom_proyecto(nombre, self.texto_template)
 
     def on_popover_clicked(self, button):
         self.popover.show_all()
@@ -372,15 +395,12 @@ class MAIN_W(object):
         subprocess.Popen.kill(self.proc1)
         time.sleep(1)
 
-    def close_main(self, arg1):
-        """TODO: Docstring for close_main.
-
-        :arg1: TODO
+    def cerrar_archivos(self):
+        """TODO: Docstring for cerrar_archivos.
         :returns: TODO
 
         """
-
-        if self.grabar:
+        if self.grabar is True:
             self.record_desktop_stop()
         if self.archivo_csv is not None:
             self.archivo_csv.close()
@@ -389,6 +409,17 @@ class MAIN_W(object):
         if self.stalker_conf is not None:
             self.stalker_conf.write("main_windows.csv\n")
             self.stalker_conf.close()
+        if self.sesion is not None:
+            self.sesion.close()
+
+    def close_main(self, arg1):
+        """TODO: Docstring for close_main.
+
+        :arg1: TODO
+        :returns: TODO
+
+        """
+        self.cerrar_archivos()
         Gtk.main_quit()
 
     def new_button(self, imagen, text, headerbar, func):

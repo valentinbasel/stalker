@@ -46,11 +46,12 @@ class HOJA(UTIL):
         self.rutastalker_py = ruta_py
         self.nombre = nombre
         self.notebook = notebook
-        self.create_textview(self.nombre, texto_template)
         self.nombre_arch_py = self.rutastalker_py + nombre + ".py"
         self.nombre_arch_salida = self.rutastalker + nombre + ".py"
         nombre_arch_csv = self.rutastalker + nombre + ".csv"
         self.archivo_csv = open(nombre_arch_csv, "w")
+        self.create_textview(self.nombre, texto_template)
+        self.actualizar_arch(self.textbuffer, self.nombre_arch_py)
 
     def create_textview(self, nombre, texto_template):
         """
@@ -85,6 +86,7 @@ class HOJA(UTIL):
         scrolledwindow.add(self.textview)
         self.textview.connect("key-press-event", self.textpress)
         self.textview.connect('button_press_event', self.boton_mouse)
+
         header.pack_start(title_label,
                           expand=True,
                           fill=True,
@@ -166,6 +168,7 @@ class HOJA(UTIL):
         # print(text)
         self.archivo_py.writelines(text)
         self.archivo_py.close()
+        print("actualizado")
 
     def execute(self, button, a, view):
         """TODO: Docstring for execute.

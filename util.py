@@ -60,6 +60,22 @@ class UTIL(object):
         button_tab.connect("clicked", func, a, b)
         vbox.pack_start(button_tab, False, True, 5)
 
+    def split_archivo(self, ruta):
+        """TODO: Docstring for split_archivo.
+        :returns: TODO
+
+        """
+        if ruta == None:
+            return None
+        ruta = ruta.split("/")
+        directorio = ""
+        archivo = ""
+        for dato in range(1, len(ruta)-1):
+            directorio = directorio + ruta[dato] + "/"
+        archivo = ruta[-1]
+        directorio = "/" + directorio
+        return directorio, archivo
+
 
 class DIALOG_OK_CANCEL(Gtk.Dialog):
 
@@ -167,7 +183,7 @@ class ABRIR_DIALOG(object):
         if tipo == "proyecto":
             filter = Gtk.FileFilter()
             filter.set_name("torcaz")
-            filter.add_pattern("*.stlkr")
+            filter.add_pattern("*.trcz")
             self.dialog.add_filter(filter)
             response = self.dialog.run()
             if response == Gtk.ResponseType.OK:
